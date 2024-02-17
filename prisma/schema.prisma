@@ -1,0 +1,55 @@
+// This is your modified Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id      String @id @default(uuid()) 
+  username         String
+  email            String         @unique
+  password         String
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  sentMessages     Conversation[] @relation("SenderConversations")
+  receivedMessages Conversation[] @relation("ReceiverConversations")
+  groupMemberships GroupMember[]
+}
+
+model Conversation {
+  id      String @id @default(uuid()) 
+  senderId String
+  recId    String?
+  groupId  String?
+  type     String
+  message  String
+  sender   User   @relation("SenderConversations", fields: [senderId], references: [id])
+  receiver User?  @relation("ReceiverConversations", fields: [recId], references: [id])
+  group    Group? @relation(fields: [groupId], references: [id])
+}
+
+model Group {
+  id      String @id @default(uuid()) 
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members      GroupMember[]
+  Conversation Conversation[]
+}
+
+model GroupMember {
+  id      String @id @default(uuid()) 
+  userId  String
+  groupId String
+
+  user  User  @relation(fields: [userId], references: [id])
+  group Group @relation(fields: [groupId], references: [id])
+
+  // @@id([userId, groupId])
+}
