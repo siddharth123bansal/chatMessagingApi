@@ -2,7 +2,7 @@ import { createServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import { PrismaClient } from "@prisma/client";
 import express, { Request, Response } from "express";
-import cors from "cors"
+import cors from "cors";
 
 const app = express();
 const server = createServer(app);
@@ -12,16 +12,31 @@ const prisma = new PrismaClient();
 app.use(express.json());
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN
+    origin: process.env.CORS_ORIGIN,
   })
-)
+);
 
 const PORT: number = parseInt(process.env.PORT || "3000", 10);
-const SocketPort:number=parseInt(process.env.SOCKET_PORT||'4000',10);
+const SocketPort: number = parseInt(process.env.SOCKET_PORT || "4000", 10);
 
 io.on("connection", (socket) => {
   console.log(`Socket connected: ${socket.id}`);
-
+  socket.on("chat message", async (msg) => {
+    try {
+      console.log({ msg:JSON.parse(msg) });
+      const message = await prisma.conversation.create({
+        data: {
+          senderId: JSON.parse(msg).senderId,
+          recId: JSON.parse(msg).recId,
+          type: JSON.parse(msg).type,
+          message: JSON.parse(msg).message,
+        },
+      });
+      io.emit("chat message", message);
+    } catch (err) {
+      console.error(err);
+    }
+  });
   socket.on("group chat", async (msg) => {
     try {
       const message = await prisma.conversation.create({
@@ -36,21 +51,6 @@ io.on("connection", (socket) => {
       io.emit("group chat", message);
     } catch (err) {
       console.log({ err });
-    }
-  });
-  socket.on("chat message", async (msg) => {
-    try {
-      const message = await prisma.conversation.create({
-        data: {
-          senderId: msg.senderId,
-          recId: msg.recId,
-          type: msg.type,
-          message: msg.message,
-        },
-      });
-      io.emit("chat message", message);
-    } catch (err) {
-      console.error(err);
     }
   });
 });
@@ -181,11 +181,11 @@ app.post("/getMessages", async (req: Request, res: Response) => {
     res.json(err);
   }
 });
-app.get('/',async(req:Request,res:Response)=>{
+app.get("/", async (req: Request, res: Response) => {
   res.json({
-    data: "Hello world"
-  })
-})
+    data: "Hello world",
+  });
+});
 
 app.get("/getGroupMessages/:groupId", async (req: Request, res: Response) => {
   try {
