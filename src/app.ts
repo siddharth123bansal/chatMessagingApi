@@ -219,10 +219,10 @@ app.get("/getGroupMessages/:groupId", async (req: Request, res: Response) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+server.listen(SocketPort, () => {
+  console.log(`Chat Server is running on http://localhost:${SocketPort}`);
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
-});
-server.listen(SocketPort, () => {
-  console.log(`Chat Server is running on http://localhost:${SocketPort}`);
 });
