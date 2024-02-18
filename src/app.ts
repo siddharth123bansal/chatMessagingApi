@@ -37,8 +37,9 @@ io.on("connection", (socket) => {
       console.error(err);
     }
   });
-  socket.on("group chat", async (msg) => {
+  socket.on("group chat", async (mssg) => {
     try {
+      const msg=JSON.parse(mssg)
       const message = await prisma.conversation.create({
         data: {
           senderId: msg.senderId,
